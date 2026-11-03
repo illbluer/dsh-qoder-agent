@@ -34,6 +34,14 @@
     "LICENSE"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/illbluer/dsh-qoder-agent.git"
+  },
+  "homepage": "https://github.com/illbluer/dsh-qoder-agent#readme",
+  "bugs": {
+    "url": "https://github.com/illbluer/dsh-qoder-agent/issues"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

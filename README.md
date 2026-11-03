@@ -1,6 +1,6 @@
 # dsh-qoder-agent
 
-把 Qoder CN 桌面 App 里的模型接入 the agent runtime，零配置、无需单独 OAuth、无需启动 CLI 子进程。
+把 Qoder CN 桌面 App 里的模型接入 the agent runtime（DeepSeek Harness），零配置、无需单独 OAuth、无需启动 CLI 子进程。
 
 ## 原理
 
@@ -9,7 +9,7 @@
 三层结构（与 dsh-workbuddy-bridge 同骨架）：
 
 1. **回环 shim** — 在 `127.0.0.1:0` 起一个 OpenAI 兼容端点（`/v1/models`、`/v1/chat/completions`、`/healthz`），四道加固（Host 回环 / Origin 回环 / 强制 JSON / 进程内随机共享密钥，常量时间比较）。
-2. **pi-ai adapter** — 把 shim 包装成 DSH 认识的 provider。
+2. **pi-ai adapter** — 把 shim 包装成 the agent runtime 认识的 provider。
 3. **注册** — `ctx.llm.registerAdapter(["qoder-agent"], adapter)`，`cordis.patch.yml` 只插入一个 `llm-qoder-agent` 条目，不改默认模型。
 
 ## 凭据从哪来
@@ -24,15 +24,19 @@
 
 ## 模型
 
-`chat` 场景 11 个（价格倍率后缀显示在名字上）：
+`chat` 场景 11 个（价格倍率 xprice_factor 后缀显示在名字上）：
 
 Auto(0.5) · Fast(0.8) · Qwen3.8-Max(0.5) · Qwen3.8-Flash(免费) · DeepSeek-V4-Pro(0.5) · DeepSeek-Flash(0.1) · GLM-5.3(0.8) · GLM-5.3-Flash(0.1) · Kimi-K3.1-Pro(1.0) · Kimi-K2.8-Preview(0.8) · MiniMax-M3.1-Flash(0.1)
+
+模型 id 就是 Qoder 的 model key（`auto`、`fast`、`qmodel_38max` …）。
 
 ## 已知限制
 
 - 只支持 Windows（凭据解密依赖 DPAPI；macOS/Linux 需要另接 Keychain/libsecret）。
 - 上游强制流式，`stream:false` 也会被转成流式并聚合。
 - 上游外层 HTTP 恒 200，错误藏在 SSE 帧的 `body` 里（`statusCodeValue` / `code`），本插件已做剥离与透传。
+- 思考档位只映射 `off / low / medium / high`（上游没有 minimal / xhigh 的拼写）。
+- 登录态变化（App 刷新 token、重新登录）会被自动感知：凭据文件按 mtime+size 校验，wasm 上下文在签名类错误后自动重建，不需要重启 DSH。
 
 ## 安装
 
